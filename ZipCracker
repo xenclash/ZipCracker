@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+import pyzipper
+import itertools
+import string
+import sys
+
+def extract_zip(zip_filename, password):
+    try:
+        with pyzipper.AESZipFile(zip_filename) as zf:
+            zf.pwd = password.encode('utf-8')
+            zf.extractall()
+            print("Password found:", password)
+            return True
+    except (RuntimeError, pyzipper.BadZipFile):
+        return False
+    except FileNotFoundError:
+        print(f"Error: File '{zip_filename}' not found.")
+        sys.exit(1)
+
+def brute_force(zip_filename, max_length=5):
+    chars = string.ascii_lowercase + string.digits
+    for length in range(1, max_length + 1):
+        for password_tuple in itertools.product(chars, repeat=length):
+            password = ''.join(password_tuple)
+            
+            if extract_zip(zip_filename, password):
+                sys.exit(0) 
+
+    print("Password not found. Try increasing the max_length or check the file.")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: zipcracker <zip_filename> [max_length]")
+        sys.exit(1)
+
+    zip_filename = sys.argv[1]
+    max_length = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+    brute_force(zip_filename, max_length)
+
+    print("\nZipCracker created by Marcelo M @Xenclash")
